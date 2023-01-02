@@ -1,4 +1,6 @@
 Repo for analyzing US population and meat consumption
+
+# Question
 - The problem you decided to investigate
 	- How much of the US population is vegetarian? Has it increased or remained? (KL: Increase)
 	- Has the increase rate of meat consumption in the US surpass the growth rate of US population? (KL: Yes) By type?
@@ -10,17 +12,11 @@ Repo for analyzing US population and meat consumption
 	- Predict the C02 emissions from the numbers of livestock
 
 
-Terms of Livestock Slaughter
-https://beef2live.com/story-glossary-terms-livestock-slaughter-85-105350#:~:text=Average%20Live%20Weight%3A%20The%20weight,excludes%20animals%20slaughtered%20on%20farms.
-- Average Live Weight: The weight of the whole animal, before slaughter. Excludes post-mortem condemnations.
-- Commercial Production: Includes slaughter and meat production in federally inspected and other plants, but excludes animals slaughtered on farms. 
-- Dressed Weight: The weight of a chilled animal carcass. Beef with kidney knob in; veal with hide off; lamb and mutton with pluck out; pork with leaf fat and kidneys out, jowls on and head off.
-
-Data Source:
-Meat Data: U.S. Department of Agriculture 
+# Data Source
+### Meat Data: U.S. Department of Agriculture 
 https://www.ers.usda.gov/data-products/livestock-and-meat-domestic-data/
 
-Population Data: United States Census Bureau
+### Population Data: United States Census Bureau
 https://www.census.gov/programs-surveys/popest/data/data-sets.html
 I found a cool stuff - Census Data API. 
 https://www.census.gov/data/developers/about.html
@@ -33,3 +29,12 @@ By examining the discovery tool, https://api.census.gov/data.html, I identified 
 - Current Population Survey: Basic Monthly
 `https://api.census.gov/data/{}/cps/basic/apr?get=A_AGE&key={}'.format(str(year), my_key)`
 The third one covers the most time period but the variables in different dataset have changed/evolved throughout the years. I need to find a more dynamic way to count the populate.
+
+# Appendix
+Terms of Livestock Slaughter
+https://beef2live.com/story-glossary-terms-livestock-slaughter-85-105350#:~:text=Average%20Live%20Weight%3A%20The%20weight,excludes%20animals%20slaughtered%20on%20farms.
+- Average Live Weight: The weight of the whole animal, before slaughter. Excludes post-mortem condemnations.
+- Commercial Production: Includes slaughter and meat production in federally inspected and other plants, but excludes animals slaughtered on farms. 
+- Dressed Weight: The weight of a chilled animal carcass. Beef with kidney knob in; veal with hide off; lamb and mutton with pluck out; pork with leaf fat and kidneys out, jowls on and head off.
+
+
