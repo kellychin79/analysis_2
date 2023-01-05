@@ -21,20 +21,25 @@ https://www.census.gov/programs-surveys/popest/data/data-sets.html
 I found a cool stuff - Census Data API. 
 https://www.census.gov/data/developers/about.html
 It is a data service that enables software developers to access and use Census Bureau data within their applications that provide users quick and easy access from an every increasing pool of publicly available datasets.
-By examining the discovery tool, https://api.census.gov/data.html, I identified a handful of API base URLs that can be used in my analysis.
+By scrutinizing the discovery tool, https://api.census.gov/data.html, I identified a handful of API base URLs that can be used in my analysis. A good understanding of dataset name helped me to grasp the nature of the API calls. Unfortunately, the data has no consistent design logic over the past three decades. Considering the drastic change of information technologies, the messy API endpoints and URLs are no one's faults.
 - 2000 Population Estimates - 2000-2010 Intercensal Estimates
 `http://api.census.gov/data/2000/pep/int_natmonthly?get=POP,MONTHLY_DESC&for=us:1&key={}'.format(my_key)`
 - Vintage Population Estimates
 `https://api.census.gov/data/2014/pep/natstprc?get=STNAME,POP&for=us:*&DATE_=7&key={}'.format(my_key)`
 - Current Population Survey: Basic Monthly
-`https://api.census.gov/data/{}/cps/basic/apr?get=A_AGE&key={}'.format(str(year), my_key)`
-The third one covers the most time period but the variables in different dataset have changed/evolved throughout the years. I need to find a more dynamic way to count the populate.
+`https://api.census.gov/data/1989/cps/basic/apr?get=A_AGE&key={}'`
+After a few trials and seeing the results, I realized that this one reveals population survey data (a.k.a `CPS`) instead of the entire population data.
+- 1990 Population Estimates - 1990-2000 Intercensal Estimates: United States Resident Population Estimates by Age and Sex
+`https://api.census.gov/data/1990/pep/int_natrespop?get=YEAR,TOT_POP&key={}`
 
 # Appendix
-Terms of Livestock Slaughter
+### Terms of Livestock Slaughter
 https://beef2live.com/story-glossary-terms-livestock-slaughter-85-105350#:~:text=Average%20Live%20Weight%3A%20The%20weight,excludes%20animals%20slaughtered%20on%20farms.
 - Average Live Weight: The weight of the whole animal, before slaughter. Excludes post-mortem condemnations.
 - Commercial Production: Includes slaughter and meat production in federally inspected and other plants, but excludes animals slaughtered on farms. 
 - Dressed Weight: The weight of a chilled animal carcass. Beef with kidney knob in; veal with hide off; lamb and mutton with pluck out; pork with leaf fat and kidneys out, jowls on and head off.
 
+### FIPS Code for the States and District of Columbia
+https://www.census.gov/library/reference/code-lists/ansi/ansi-codes-for-states.html
+Although there are only 50 states, FIPS codes go up to 56.
 
