@@ -32,14 +32,14 @@ After a few trials and seeing the results, I realized that this one reveals popu
 - 1990 Population Estimates - 1990-2000 Intercensal Estimates: United States Resident Population Estimates by Age and Sex
 `https://api.census.gov/data/1990/pep/int_natrespop?get=YEAR,TOT_POP&key={}`
 
-# Appendix
-### Terms of Livestock Slaughter
+## Appendix
+#### Terms of Livestock Slaughter
 https://beef2live.com/story-glossary-terms-livestock-slaughter-85-105350#:~:text=Average%20Live%20Weight%3A%20The%20weight,excludes%20animals%20slaughtered%20on%20farms.
 - Average Live Weight: The weight of the whole animal, before slaughter. Excludes post-mortem condemnations.
 - Commercial Production: Includes slaughter and meat production in federally inspected and other plants, but excludes animals slaughtered on farms. 
 - Dressed Weight: The weight of a chilled animal carcass. Beef with kidney knob in; veal with hide off; lamb and mutton with pluck out; pork with leaf fat and kidneys out, jowls on and head off.
 
-### FIPS Code for the States and District of Columbia
+#### FIPS Code for the States and District of Columbia
 https://www.census.gov/library/reference/code-lists/ansi/ansi-codes-for-states.html
-Although there are only 50 states, FIPS codes go up to 56.
+Some API calls require FIPS code so I did some research about it even though it is not used in the final analysis. Although there are only 50 states, FIPS codes go up to 56.
 
