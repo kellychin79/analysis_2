@@ -238,12 +238,12 @@ def get_text_label(df, val_name, ax, types, max_or_min = 'max'):
     ax.text(x = year, y = val, s = str(int(val.values)))    
 
 
-# In[230]:
+# In[305]:
 
 
 meat_prod4 = meat_prod3[meat_prod3['Year']>= '1990-01-01'].rename(columns={'variable':'Types'})
 g = sns.relplot(data=meat_prod4, x='Year', y = 'value_in_billion', 
-                kind='line', hue='Types',height=6)#, aspect=2)
+                kind='line', hue='Types',height=6)#, aspect=0.7)
 # extract yearly labels every five year
 yearly_labels = sorted(list(set(meat_prod4['Year'].dt.year.astype(str))))
 # display xtick labels every five year at 0 or 5
@@ -258,6 +258,8 @@ for i in meat_prod4['Types'].unique():
         get_text_label(df = meat_prod4, val_name = 'value_in_billion',
                        ax = plt.gca(), types = i, max_or_min = j)
 
+
+# The scope of meat production does not cover animals slaughtered on farms. For the past three decades, US meat production has increased in beef and pork, particularly by 250% in broilers. Turkey has remained almost the same since 1990.
 
 # ## Slaughter Counts
 
@@ -590,7 +592,7 @@ slau_weight3['Year'] = pd.to_datetime(slau_weight3['Year'])
 slau_weight3.info()
 
 
-# In[265]:
+# In[304]:
 
 
 slau_weight4 = slau_weight3[slau_weight3['Year']>= '1990-01-01']
@@ -600,7 +602,7 @@ dic = {'broilers':'2. broilers', 'cattle': '1. cattle', 'sheep_and_lambs':'2. sh
 slau_weight4 = slau_weight4.replace({'Types': dic})
 
 g = sns.relplot(data=slau_weight4.sort_values('Types'), x='Year', y = 'weight_in_billion', 
-                kind='line', hue='Types',height=6)#, aspect=2)
+                kind='line', hue='Types',height=6)#, aspect=0.7)
 # extract yearly labels every five year
 yearly_labels = sorted(list(set(slau_weight4['Year'].dt.year.astype(str))))
 # display xtick labels every five year at 0 or 5
@@ -615,6 +617,8 @@ for i in slau_weight4['Types'].unique():
         get_text_label(df = slau_weight4, val_name = 'weight_in_billion',
                        ax = plt.gca(), types = i, max_or_min = j)
 
+
+# Carcass weight is limited to chilled animals, so it accounts for only the partial weight of the live animals. Note that these two categories have no subset relationship; nevertheless, they show a similar trend! For the past three decades, yearly slaughter weight in the US has increased in cattle (beef) and hogs (pork). It also shows a significant 250% increase in broilers. 
 
 # ## US Population (Census Data API)                       
 
@@ -847,14 +851,15 @@ for year in range(2015, 2022):
 yearly_ct
 
 
-# In[293]:
+# In[303]:
 
 
 df = pd.DataFrame({'Year':yearly_ct.keys(), 'Pop':yearly_ct.values()})
 df = df[df['Pop']!=0]
 df['Population (Millions)'] = df['Pop'].apply(lambda x: x/1000000)
-sns.relplot(data=df, x='Year', y = 'Population (Millions)', kind='line')
+sns.relplot(data=df, x='Year', y = 'Population (Millions)', kind='line')#, height = 6, aspect = 0.7)
 plt.ylim(0)
+plt.title('US Population')
 
 # label the data points at the first and last year
 max_year = df['Year'].max()
@@ -866,6 +871,8 @@ min_year_val = df.loc[df['Year'] == min_year, 'Population (Millions)']
 plt.gca().text(x = df['Year'].min(), y = min_year_val - 15, 
                s = str(int(min_year_val.values)))    
 
+
+# The US population has increased by around 33% since 1990. By comparison, the relatively high-increasing meat consumption, especially 250% in broilers, is quite worrying and alarming. No wonder Chick-fil-A has more than 4 drive-thru lanes and people are lining up all the time. 
 
 # In[ ]:
 
