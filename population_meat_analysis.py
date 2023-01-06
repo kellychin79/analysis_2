@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[236]:
+# In[269]:
 
 
 import pandas as pd
@@ -10,15 +10,17 @@ import re
 from datetime import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
-from urllib import request 
+import urllib.request 
 from urllib.error import HTTPError
 import json
 import time
 
+sns.set_style('darkgrid')
 
-# ## Meat Production (live weight, the weight of the whole animal)
 
-# In[237]:
+# ## Meat Production (excluding animals slaughtered on farms)
+
+# In[207]:
 
 
 xlsx = pd.ExcelFile('data/meat_statistics.xlsx')
@@ -26,7 +28,7 @@ xlsx = pd.ExcelFile('data/meat_statistics.xlsx')
 
 # The original excel file was designed for human readable, including merged cells for the first category (a.k.a Commerical vs. Federally Inspected below) and then individual cells for the secondary category (a.k.a row 0). 
 
-# In[238]:
+# In[208]:
 
 
 raw_data = pd.read_excel(xlsx, sheet_name = 'RedMeatPoultry_Prod-Full', header = 1)
@@ -35,7 +37,7 @@ raw_data.head()
 
 # There are two types - Commerical vs. Federally Inspected. Their numbers are pretty close. I decided to use the numbers under Federally Inspected because it contains more information in terms of meat types. 
 
-# In[239]:
+# In[209]:
 
 
 idx = list(raw_data.columns).index('Federally inspected')
@@ -45,7 +47,7 @@ for i in range(len(raw_data.columns)):
         idxs.append(i)
 
 
-# In[240]:
+# In[210]:
 
 
 raw_data = raw_data.iloc[:, idxs]
@@ -54,7 +56,7 @@ raw_data.head()
 
 # Replace the current header with the first row (a.k.a the secondary categories) and remove the empty column
 
-# In[241]:
+# In[211]:
 
 
 new_header = raw_data.iloc[0, :-1]
@@ -71,7 +73,7 @@ raw_data.head()
 # - 5/ Ready-to-cook.																
 # - 6/ Includes geese, guineas, ostriches, emus, rheas, squab, and other poultry.																
 
-# In[242]:
+# In[212]:
 
 
 current_header = raw_data.columns[1:] 
@@ -85,13 +87,13 @@ raw_data.head()
 
 # Remove the rows containing additional information
 
-# In[243]:
+# In[213]:
 
 
 raw_data.tail(10)
 
 
-# In[244]:
+# In[214]:
 
 
 trim_data = raw_data[~raw_data['Month'].str.contains('/ |Source|Date run')]
@@ -100,7 +102,7 @@ trim_data.tail()
 
 # Drop columns for aggregation information and the type of `Other Chicken`
 
-# In[245]:
+# In[215]:
 
 
 trim_data = trim_data.iloc[:, [0,1,2,3,4,6,8]]
@@ -109,13 +111,13 @@ trim_data.head()
 
 # Keep only the monthly data and then convert to datetime data type
 
-# In[246]:
+# In[216]:
 
 
 trim_data.head()
 
 
-# In[247]:
+# In[217]:
 
 
 meat_prod = trim_data.copy()
@@ -123,34 +125,34 @@ meat_prod = meat_prod[meat_prod['Month'].str.contains(r'\w{3}-\d{4}', regex=True
 meat_prod.head()
 
 
-# In[248]:
+# In[218]:
 
 
 meat_prod['Month'] = meat_prod['Month'].apply(lambda x: datetime.strptime(x, '%b-%Y'))
 meat_prod.head()
 
 
-# In[249]:
+# In[219]:
 
 
 meat_prod.info()
 
 
-# In[250]:
+# In[220]:
 
 
 # outliers in 1982 and 1948, data unavailabe between 1957 and 1976
 sns.relplot(data=meat_prod, x='Month', y = 'beef')
 
 
-# In[251]:
+# In[221]:
 
 
 # 1982 some categories only have quartly data, 1948 December had no clear reasoning
 meat_prod.loc[meat_prod['Month'].dt.year==1982, :]
 
 
-# In[252]:
+# In[222]:
 
 
 for i in ['beef', 'veal', 'pork', 'lamb_and_mutton']:
@@ -159,7 +161,7 @@ for i in ['beef', 'veal', 'pork', 'lamb_and_mutton']:
 meat_prod.loc[meat_prod['Month'].dt.year==1982, :]
 
 
-# In[253]:
+# In[223]:
 
 
 # split in 3 evenly and forward fill in missing data 
@@ -168,14 +170,14 @@ meat_prod = meat_prod.fillna(method='ffill', limit=2)
 meat_prod.loc[meat_prod['Month'].dt.year==1982, :]
 
 
-# In[254]:
+# In[224]:
 
 
 # smooth out the outliers in 1982, drop the outlier in 1948
 sns.relplot(data=meat_prod, x='Month', y = 'beef', kind='line')
 
 
-# In[287]:
+# In[225]:
 
 
 # transform the data to visualize on one chart
@@ -183,7 +185,7 @@ meat_prod2 = pd.melt(meat_prod, id_vars=['Month'], value_vars=meat_prod.columns[
 meat_prod2 = meat_prod2.sort_values(['Month', 'variable'])
 
 
-# In[289]:
+# In[226]:
 
 
 g = sns.relplot(data=meat_prod2.rename(columns={'variable':'Types'}), x='Month', y = 'value', 
@@ -199,45 +201,69 @@ g.set(title='Meat Production')
 
 # Aggregate to yearly data making the curve smooth
 
-# In[285]:
+# In[227]:
 
 
 meat_prod2['Year'] = meat_prod2['Month'].dt.to_period('Y')
-meat_prod3 = meat_prod2.groupby(['Year','variable']).mean().reset_index()
+meat_prod3 = meat_prod2.groupby(['Year','variable']).sum().reset_index()
 meat_prod3['Year'] = meat_prod3['Year'].astype(str)
+meat_prod3['value_in_billion'] = meat_prod3.apply(lambda x: x['value']/9*12/1000 
+                                                  if x['Year'] == '2022' 
+                                                  else x['value']/1000
+                                                  , axis = 1)
 meat_prod3['Year'] = pd.to_datetime(meat_prod3['Year'])
 meat_prod3.info()
 
 
-# In[290]:
+# In[228]:
 
 
-g = sns.relplot(data=meat_prod3.rename(columns={'variable':'Types'}), x='Year', y = 'value', 
-                kind='line', hue='Types',height=6, aspect=2)
-g.set(xlabel='Year', ylabel='Pounds (Million)')
+g = sns.relplot(data=meat_prod3.rename(columns={'variable':'Types'}),
+                x='Year', y = 'value_in_billion', kind='line', hue='Types',height=6, aspect=2)
+g.set(xlabel='Year', ylabel='Pounds (Billion)')
 g.set(title='Meat Production')
 
 
-# In[321]:
+# In[229]:
+
+
+def get_text_label(df, val_name, ax, types, max_or_min = 'max'):
+    if max_or_min == 'max':
+        year = df['Year'].max()
+    else:
+        year = df['Year'].min()
+        
+    val = df.loc[(df['Types']==types) & (df['Year'] == year), val_name]
+    
+    ax.text(x = year, y = val, s = str(int(val.values)))    
+
+
+# In[230]:
 
 
 meat_prod4 = meat_prod3[meat_prod3['Year']>= '1990-01-01'].rename(columns={'variable':'Types'})
-g = sns.relplot(data=meat_prod4, x='Year', y = 'value', 
+g = sns.relplot(data=meat_prod4, x='Year', y = 'value_in_billion', 
                 kind='line', hue='Types',height=6)#, aspect=2)
 # extract yearly labels every five year
 yearly_labels = sorted(list(set(meat_prod4['Year'].dt.year.astype(str))))
 # display xtick labels every five year at 0 or 5
 g.set(xticks=[yearly_labels[i] for i in range(0, len(yearly_labels), 5)])
 g.set(xticklabels=[yearly_labels[i] for i in range(0, len(yearly_labels), 5)])
-g.set(xlabel='Year', ylabel='Pounds (Million)')
+g.set(xlabel='Year', ylabel='Pounds (Billion)')
 g.set(title='Meat Production')
+
+# label the data points at the first and last year
+for i in meat_prod4['Types'].unique():
+    for j in ['max', 'min']:
+        get_text_label(df = meat_prod4, val_name = 'value_in_billion',
+                       ax = plt.gca(), types = i, max_or_min = j)
 
 
 # ## Slaughter Counts
 
 # The original excel file was designed for human readable, including merged cells for the first category (a.k.a Commerical vs. Federally Inspected below) and then individual cells for the secondary category (a.k.a row 0). 
 
-# In[322]:
+# In[231]:
 
 
 raw_data2 = pd.read_excel(xlsx, sheet_name = 'SlaughterCounts-Full', header = 1)
@@ -246,7 +272,7 @@ raw_data2.head()
 
 # There are two types - Commerical vs. Federally Inspected. Their numbers are pretty close. I decided to use the numbers under Federally Inspected because it contains more information in terms of meat types. 
 
-# In[323]:
+# In[232]:
 
 
 idx = list(raw_data2.columns).index('Federally inspected 3/')
@@ -256,7 +282,7 @@ for i in range(len(raw_data2.columns)):
         idxs.append(i)
 
 
-# In[324]:
+# In[233]:
 
 
 raw_data2 = raw_data2.iloc[:, idxs]
@@ -266,7 +292,7 @@ raw_data2.head()
 
 # Replace the current header with the first row (a.k.a the secondary categories) and remove the empty column
 
-# In[325]:
+# In[234]:
 
 
 new_header = raw_data2.iloc[0, :]
@@ -277,7 +303,7 @@ raw_data2.head()
 
 # Transform the header by removing space and punctuations													
 
-# In[326]:
+# In[235]:
 
 
 current_header = raw_data2.columns[1:] 
@@ -291,13 +317,13 @@ raw_data2.head()
 
 # Remove the rows containing additional information
 
-# In[327]:
+# In[236]:
 
 
 raw_data2.tail(5)
 
 
-# In[328]:
+# In[237]:
 
 
 trim_data2 = raw_data2.dropna(thresh=3) # keep only rows containing 3+ observations
@@ -306,7 +332,7 @@ trim_data2.tail(5)
 
 # Keep columns for more common types
 
-# In[329]:
+# In[238]:
 
 
 trim_data2 = trim_data2.iloc[:, [0,1,3,4,7,8,12,15,17]]
@@ -315,7 +341,7 @@ trim_data2.head()
 
 # Keep only the monthly data and then convert to datetime data type
 
-# In[330]:
+# In[239]:
 
 
 slau_count = trim_data2.copy()
@@ -323,28 +349,28 @@ slau_count = slau_count[slau_count['Month'].str.contains(r'\w{3}-\d{4}', regex=T
 slau_count.head()
 
 
-# In[331]:
+# In[240]:
 
 
 slau_count['Month'] = slau_count['Month'].apply(lambda x: datetime.strptime(x, '%b-%Y'))
 slau_count.head()
 
 
-# In[355]:
+# In[241]:
 
 
 # outliers in 1982 
 sns.relplot(data=slau_count, x='Month', y = 'cattle', aspect=2)
 
 
-# In[333]:
+# In[242]:
 
 
 # 1982 some categories only have quartly data
 slau_count.loc[slau_count['Month'].dt.year==1982, :]
 
 
-# In[334]:
+# In[243]:
 
 
 for i in ['cattle', 'heifers', 'hogs', 'sheep_and_lambs']:
@@ -353,7 +379,7 @@ for i in ['cattle', 'heifers', 'hogs', 'sheep_and_lambs']:
 slau_count.loc[slau_count['Month'].dt.year==1982, :]
 
 
-# In[335]:
+# In[244]:
 
 
 # split in 3 evenly and forward fill in missing data 
@@ -362,14 +388,14 @@ slau_count = slau_count.fillna(method='ffill', limit=2)
 slau_count.loc[slau_count['Month'].dt.year==1982, :]
 
 
-# In[356]:
+# In[245]:
 
 
 # smooth out the outliers in 1982, drop the outlier in 1948
 sns.relplot(data=slau_count, x='Month', y = 'cattle', kind='line', aspect = 2)
 
 
-# In[337]:
+# In[246]:
 
 
 # transform the data to visualize on one chart
@@ -377,7 +403,7 @@ slau_count2 = pd.melt(slau_count, id_vars=['Month'], value_vars=slau_count.colum
 slau_count2 = slau_count2.rename(columns={'variable':'Types'})
 
 
-# In[338]:
+# In[247]:
 
 
 g = sns.relplot(data=slau_count2.rename(columns={'variable':'Types'}), x='Month', y = 'value', 
@@ -397,7 +423,7 @@ g.set(title='Slaughter Counts')
 
 # The original excel file was designed for human readable, including merged cells for the first category (a.k.a Commerical vs. Federally Inspected below) and then individual cells for the secondary category (a.k.a row 0). 
 
-# In[339]:
+# In[248]:
 
 
 raw_data3 = pd.read_excel(xlsx, sheet_name = 'SlaughterWeights-Full', header = 1)
@@ -406,7 +432,7 @@ raw_data3.head()
 
 # There are three types - `Commercial average live`, `Federally inspected average live`, and `Federally inspected average dressed`. Two average live numbers are pretty close and relatively higher than the average dressed numbers. I decided to use the numbers under Federally Inspected average live because it contains the critical category - broilers.
 
-# In[340]:
+# In[249]:
 
 
 idx = list(raw_data3.columns).index('Federally inspected average live')
@@ -417,7 +443,7 @@ for i in range(len(raw_data3.columns)):
         idxs.append(i)
 
 
-# In[341]:
+# In[250]:
 
 
 raw_data3 = raw_data3.iloc[:, idxs]
@@ -427,7 +453,7 @@ raw_data3.head()
 
 # Replace the current header with the first row (a.k.a the secondary categories) and remove the empty column
 
-# In[342]:
+# In[251]:
 
 
 new_header = raw_data3.iloc[0, :]
@@ -438,7 +464,7 @@ raw_data3.head()
 
 # Transform the header by removing space and punctuations													
 
-# In[343]:
+# In[252]:
 
 
 current_header = raw_data3.columns[1:] 
@@ -452,13 +478,13 @@ raw_data3.head()
 
 # Remove the rows containing additional information
 
-# In[344]:
+# In[253]:
 
 
 raw_data3.tail(5)
 
 
-# In[345]:
+# In[254]:
 
 
 trim_data3 = raw_data3.dropna(thresh=3) # keep only rows containing 3+ observations
@@ -467,7 +493,7 @@ trim_data3.tail(5)
 
 # Keep columns for more common types
 
-# In[346]:
+# In[255]:
 
 
 trim_data3 = trim_data3.iloc[:, [0,1,2,3,4,5,7]]
@@ -476,7 +502,7 @@ trim_data3.head()
 
 # Keep only the monthly data and then convert to datetime data type
 
-# In[347]:
+# In[256]:
 
 
 slau_avg_weight = trim_data3.copy()
@@ -484,21 +510,21 @@ slau_avg_weight = slau_avg_weight[slau_avg_weight['Month'].str.contains(r'\w{3}-
 slau_avg_weight.head()
 
 
-# In[348]:
+# In[257]:
 
 
 slau_avg_weight['Month'] = slau_avg_weight['Month'].apply(lambda x: datetime.strptime(x, '%b-%Y'))
 slau_avg_weight.head()
 
 
-# In[357]:
+# In[258]:
 
 
 # no outliers because it is not aggregated like count or production
 sns.relplot(data=slau_avg_weight, x='Month', y = 'cattle', aspect = 2)
 
 
-# In[350]:
+# In[259]:
 
 
 # transform the data to visualize on one chart
@@ -508,23 +534,24 @@ slau_avg_weight2 = pd.melt(slau_avg_weight, id_vars=['Month'], value_vars=slau_a
 slau_avg_weight2 = slau_avg_weight2.fillna(method='ffill', limit=2)
 
 
-# In[351]:
+# In[260]:
 
 
 # combine average weight and count information
-slau_weight = pd.merge(left = slau_avg_weight2, right = slau_count2.rename(columns={'value':'count'}), on = ['Month', 'Types'])
+slau_weight = pd.merge(left = slau_avg_weight2, right = slau_count2.rename(columns={'value':'count_in_thousand'}), on = ['Month', 'Types'])
 slau_weight.head()
 
 
-# In[352]:
+# In[261]:
 
 
 # calculate total weight
-slau_weight['weight_in_thousands'] =  slau_weight['average_weight'] * slau_weight['count'] / 1000
+slau_weight['weight'] =  slau_weight['average_weight'] * slau_weight['count_in_thousand'] * 1000
+slau_weight['weight_in_million'] =  slau_weight['weight'] / 1000000
 slau_weight.head()
 
 
-# In[353]:
+# In[262]:
 
 
 # drop rows containing any missing values
@@ -533,37 +560,37 @@ slau_weight2 = slau_weight.dropna()
 print(slau_weight2.shape)
 
 
-# In[354]:
+# In[263]:
 
 
-g = sns.relplot(data=slau_weight2, x='Month', y = 'weight_in_thousands', 
+g = sns.relplot(data=slau_weight2, x='Month', y = 'weight_in_million', 
                 kind='line', hue='Types',height=6, aspect=2)
 # extract yearly labels every five year
 yearly_labels = sorted(list(slau_avg_weight.loc[slau_avg_weight['Month'].dt.month == 1, 'Month'].dt.year.astype(str)))
 # display xtick labels every five year at 0 or 5
 g.set(xticks=[yearly_labels[i+4] for i in range(0, len(yearly_labels)-4, 5)])
 g.set(xticklabels=[yearly_labels[i+4] for i in range(0, len(yearly_labels)-4, 5)])
-g.set(xlabel='Year', ylabel='Thousand Pounds')
+g.set(xlabel='Year', ylabel='Million Pounds')
 g.set(title='Slaughter Weight')
 
 
 # Aggregate to yearly data making the curve smooth
 
-# In[382]:
+# In[264]:
 
 
 slau_weight2['Year'] = slau_weight2['Month'].dt.to_period('Y')
 slau_weight3 = slau_weight2.groupby(['Year','Types']).sum().reset_index()
 slau_weight3['Year'] = slau_weight3['Year'].astype(str)
-slau_weight3['weight_in_million'] = slau_weight3.apply(lambda x: x['weight_in_thousands']/9*12/1000 
+slau_weight3['weight_in_billion'] = slau_weight3.apply(lambda x: x['weight_in_million']/9*12/1000
                                                          if x['Year'] == '2022' 
-                                                         else x['weight_in_thousands']/1000
+                                                         else x['weight_in_million']/1000
                                                          , axis = 1)
 slau_weight3['Year'] = pd.to_datetime(slau_weight3['Year'])
 slau_weight3.info()
 
 
-# In[388]:
+# In[265]:
 
 
 slau_weight4 = slau_weight3[slau_weight3['Year']>= '1990-01-01']
@@ -572,15 +599,21 @@ dic = {'broilers':'2. broilers', 'cattle': '1. cattle', 'sheep_and_lambs':'2. sh
        'hogs' : '4. hogs', 'turkeys': '5. turkeys', 'calves': '6. calves'}
 slau_weight4 = slau_weight4.replace({'Types': dic})
 
-g = sns.relplot(data=slau_weight4.sort_values('Types'), x='Year', y = 'weight_in_million', 
+g = sns.relplot(data=slau_weight4.sort_values('Types'), x='Year', y = 'weight_in_billion', 
                 kind='line', hue='Types',height=6)#, aspect=2)
 # extract yearly labels every five year
 yearly_labels = sorted(list(set(slau_weight4['Year'].dt.year.astype(str))))
 # display xtick labels every five year at 0 or 5
 g.set(xticks=[yearly_labels[i] for i in range(0, len(yearly_labels), 5)])
 g.set(xticklabels=[yearly_labels[i] for i in range(0, len(yearly_labels), 5)])
-g.set(xlabel='Year', ylabel='Pounds (Million)')
-g.set(title='Slaughter Weight')
+g.set(xlabel='Year', ylabel='Pounds (Billion)')
+g.set(title='Slaughter Weight (Carcass Weight)')
+
+# label the data points at the first and last year
+for i in slau_weight4['Types'].unique():
+    for j in ['max', 'min']:
+        get_text_label(df = slau_weight4, val_name = 'weight_in_billion',
+                       ax = plt.gca(), types = i, max_or_min = j)
 
 
 # ## US Population (Census Data API)                       
@@ -589,13 +622,13 @@ g.set(title='Slaughter Weight')
 
 # ![image.png](attachment:image.png)
 
-# In[62]:
+# In[270]:
 
 
-my_key = '6d04c5842f4f5fc4d6a4c68dfc07072389af07c8'
+my_key = ''
 
 
-# In[63]:
+# In[271]:
 
 
 # 2000 Population Estimates - 2000-2010 Intercensal Estimates: National Monthly Population Estimates
@@ -606,7 +639,7 @@ result1 = json.loads(json_result)
 result1
 
 
-# In[64]:
+# In[272]:
 
 
 # Vintage Population Estimates: US, State, and PR Total Population and Components of Change (2013-2019)
@@ -618,7 +651,7 @@ result = json.loads(json_result)
 results.append(result)"""
 
 
-# In[101]:
+# In[273]:
 
 
 # Current Population Survey: Basic Monthly (1989-2022)
@@ -673,7 +706,7 @@ print('Elapsed Time: {} minutes.'.format(str((end_time - start_time)/60)))
 # 
 # - Variable dictionary for post-1994: https://api.census.gov/data/1994/cps/basic/apr/variables.html
 
-# In[103]:
+# In[274]:
 
 
 len(yearly_ct)
@@ -681,7 +714,7 @@ len(yearly_ct)
 
 # **MATCH!!** 1989 through 2022 = 34 years
 
-# In[104]:
+# In[275]:
 
 
 yearly_ct
@@ -689,7 +722,7 @@ yearly_ct
 
 # These numbers are too low to be correct. I have to find another method.
 
-# In[186]:
+# In[276]:
 
 
 # 1990 Population Estimates - 1990-2000 Intercensal Estimates: United States Resident Population Estimates by Age and Sex
@@ -699,13 +732,13 @@ results = json.loads(json_result)
     
 
 
-# In[187]:
+# In[277]:
 
 
 results[:2]
 
 
-# In[188]:
+# In[278]:
 
 
 yearly_ct = {}
@@ -715,7 +748,7 @@ for i in results[1:]:
 yearly_ct.keys()
 
 
-# In[189]:
+# In[279]:
 
 
 # 2000 Population Estimates - 2000-2010 Intercensal Estimates: Population
@@ -725,13 +758,13 @@ results = json.loads(json_result)
     
 
 
-# In[190]:
+# In[280]:
 
 
 results[:2]
 
 
-# In[191]:
+# In[281]:
 
 
 # the first year is 2000, so add 1999. This overwrites year 2000 from the last method
@@ -741,7 +774,7 @@ for i in results[1:]:
 yearly_ct.keys()
 
 
-# In[194]:
+# In[282]:
 
 
 # 2012 National Population Projections: Projected Population by Single Year of Age
@@ -754,7 +787,7 @@ yearly_ct[year] = int(results[1][1])
 yearly_ct.keys()
 
 
-# In[196]:
+# In[283]:
 
 
 def get_result(link):
@@ -764,7 +797,7 @@ def get_result(link):
     return int(results[1][1])
 
 
-# In[197]:
+# In[284]:
 
 
 ## 2013 - 2014: Vintage XXXX Population Estimates: US, State, and PR Total Population and Components of Change
@@ -778,7 +811,7 @@ for year in range(2013, 2015):
     yearly_ct[year] = get_result(api_link)
 
 
-# In[198]:
+# In[285]:
 
 
 # 2015 - 2021: Vintage XXXX Population Estimates: Population Estimates
@@ -814,7 +847,7 @@ for year in range(2015, 2022):
 yearly_ct
 
 
-# In[209]:
+# In[293]:
 
 
 df = pd.DataFrame({'Year':yearly_ct.keys(), 'Pop':yearly_ct.values()})
@@ -822,6 +855,16 @@ df = df[df['Pop']!=0]
 df['Population (Millions)'] = df['Pop'].apply(lambda x: x/1000000)
 sns.relplot(data=df, x='Year', y = 'Population (Millions)', kind='line')
 plt.ylim(0)
+
+# label the data points at the first and last year
+max_year = df['Year'].max()
+max_year_val = df.loc[df['Year'] == max_year, 'Population (Millions)']
+plt.gca().text(x = max_year, y = max_year_val - 15, 
+               s = str(int(max_year_val.values)))    
+min_year = df['Year'].min()
+min_year_val = df.loc[df['Year'] == min_year, 'Population (Millions)']
+plt.gca().text(x = df['Year'].min(), y = min_year_val - 15, 
+               s = str(int(min_year_val.values)))    
 
 
 # In[ ]:
