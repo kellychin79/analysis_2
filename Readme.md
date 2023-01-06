@@ -13,7 +13,7 @@ I am a failed vegetarian. I am also a data analyst that wants to look into open-
 4. Suggestions for future research, including improvements to what you did *(KL: Predict the C02 emissions from the numbers of livestock)*
 
 # Summary
-The US population has increased by around 33% since 1990. By comparison, the relatively high-increasing meat consumption, especially 250% in broilers, is quite worrying and alarming. No wonder Chick-fil-A has more than 4 drive-thru lanes and people are lining up all the time. 
+The US population has increased by around 33% since 1990. By comparison, the relatively high-increasing meat consumption, especially 250% in broilers, is quite worrying and alarming. No wonder Chick-fil-A has more than 4 drive-thru lanes and people are lining up all the time. <br />
 
 
 ## Data Source
@@ -37,7 +37,8 @@ By scrutinizing the discovery tool, https://api.census.gov/data.html, I identifi
 After a few trials and seeing the results, I realized that this one reveals population survey data (a.k.a `CPS`) instead of the entire population data.
 - 1990 Population Estimates - 1990-2000 Intercensal Estimates: United States Resident Population Estimates by Age and Sex
 `https://api.census.gov/data/1990/pep/int_natrespop?get=YEAR,TOT_POP&key={my_key}`
-Unfortunately, the data has no consistent design logic over the past three decades. Considering the drastic change of information technologies, the messy API endpoints and URLs are no one's faults.
+
+Unfortunately, the data has no consistent design logic over the past three decades. Considering the drastic change of information technologies, the messy API endpoints and URLs are no one's faults.<br />
 
 
 ## Appendix
@@ -51,5 +52,6 @@ https://beef2live.com/story-glossary-terms-livestock-slaughter-85-105350#:~:text
 
 #### FIPS Code for the States and District of Columbia
 https://www.census.gov/library/reference/code-lists/ansi/ansi-codes-for-states.html
+
 Some API calls require FIPS code so I did some research about it even though it is not used in the final analysis. Although there are only 50 states, FIPS codes go up to 56.
 
